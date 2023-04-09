@@ -1,8 +1,10 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include <stdlib.h>
+#include <cmath>
 
-const int WIDTH = 800, HEIGHT = 600;
+const int WIDTH = 1280, HEIGHT = 920;
 
 void handleEvents(sf::RenderWindow& win) {
   sf::Event e;
@@ -28,6 +30,22 @@ class Life {
   private:
     std::vector<std::vector<Cell>> cells;
     int scale, rows, cols;
+
+    int countNeighbors(Cell c) {
+      int total = 0;
+      for (auto i = c.y - 1; i <= c.y + 1; i++) {
+        int di = (i + rows) % rows; 
+        for (auto j = c.x - 1; j <= c.x + 1; j++) {
+          int dj = (j + cols) % cols;
+          if (i == c.y && j == c.x) continue;
+
+          if (cells[di][dj].alive) total += 1;
+        }
+      }
+
+      return total;
+    }
+  
   public:
     Life(const int& w, const int& h, const int& s) {
       scale = s;
@@ -35,22 +53,51 @@ class Life {
       cols = w / scale;
 
       // Setup cells
+      long treshold = pow(2,28);
       for (auto i = 0; i < rows; ++i) {
         cells.push_back(std::vector<Cell>());
         for (auto j = 0; j < cols; ++j) {
+          long r = random();
           Cell c {
             x: j,
             y: i,
             shape: sf::RectangleShape(sf::Vector2f((float) s, (float) s)),
-            alive: true
+            alive: (r < treshold) ? true : false
           };
           c.shape.setFillColor(sf::Color::Yellow);
           c.shape.setPosition(sf::Vector2f(j*s, i*s));
-          c.shape.setOutlineThickness(0.5);
-          c.shape.setOutlineColor(sf::Color::Red);
           cells[i].push_back(c);
         }
       }
+    }
+
+    void evaluateGen() {
+      std::vector<std::vector<Cell>> nextGen;
+      nextGen.reserve(rows);
+      for (auto row : cells) {
+        nextGen.push_back(std::vector<Cell>());
+        for (auto cell : row) {
+          auto neighbors = countNeighbors(cell);
+          Cell c = {
+            x: cell.x,
+            y: cell.y,
+            shape: cell.shape,
+            alive: cell.alive
+          };
+
+          if (neighbors == 3 && !cell.alive) {
+            c.alive = true;
+          } else if (neighbors < 2) {
+            c.alive = false;
+          } else if (neighbors > 3) {
+            c.alive = false;
+          }
+
+          nextGen[c.y].push_back(c);
+        }
+      }
+
+      cells = nextGen;
     }
 
     void draw(sf::RenderWindow& win) {
@@ -71,6 +118,7 @@ int main() {
     handleEvents(win);
     win.clear();
     game.draw(win);
+    game.evaluateGen();
     win.display();
   }
   
