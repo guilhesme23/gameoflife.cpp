@@ -37,29 +37,35 @@ class Life {
     return total;
   }
 
- public:
-  Life(const int& w, const int& h, const int& s) {
-    scale = s;
-    rows = h / scale;
-    cols = w / scale;
+  std::vector<std::vector<Cell>> buildGen() {
     double r;
-
+    std::vector<std::vector<Cell>> generation;
     // Setup cells
     for (auto i = 0; i < rows; ++i) {
-      cells.push_back(std::vector<Cell>());
+      generation.push_back(std::vector<Cell>());
       for (auto j = 0; j < cols; ++j) {
         r = ((double)std::rand() / (double)RAND_MAX);
         Cell c{
           x : j,
           y : i,
-          shape : sf::RectangleShape(sf::Vector2f((float)s, (float)s)),
+          shape : sf::RectangleShape(sf::Vector2f((float)scale, (float)scale)),
           alive : (r < 0.65) ? true : false
         };
         c.shape.setFillColor(sf::Color::Yellow);
-        c.shape.setPosition(sf::Vector2f(j * s, i * s));
-        cells[i].push_back(c);
+        c.shape.setPosition(sf::Vector2f(j * scale, i * scale));
+        generation[i].push_back(c);
       }
     }
+
+    return generation;
+  }
+
+ public:
+  Life(const int& w, const int& h, const int& s) {
+    scale = s;
+    rows = h / scale;
+    cols = w / scale;
+    cells = buildGen();
   }
 
   void evaluateGen() {
@@ -91,6 +97,10 @@ class Life {
     cells = nextGen;
   }
 
+  void reset() {
+    cells = buildGen();
+  }
+
   void draw(sf::RenderWindow& win) {
     for (auto row : cells) {
       for (auto cell : row) {
@@ -114,6 +124,19 @@ void handleEvents(sf::RenderWindow& win) {
   }
 }
 
+bool menuWindow(bool& pause, Life& game) {
+  ImGuiWindowFlags flags = ImGuiWindowFlags_NoResize;
+  bool open = false;
+  ImGui::Begin("Menu", &open, flags);
+  ImGui::Text("Controls:");
+  std::string btnText = (!pause) ? "Pause" : "Play";
+  if (ImGui::Button(btnText.c_str())) pause = !pause;
+  if (ImGui::Button("Reset Board")) game.reset();
+  ImGui::End();
+
+  return pause;
+}
+
 int main() {
   sf::RenderWindow win(sf::VideoMode(WIDTH, HEIGHT), "Game Of Life");
   ImGui::SFML::Init(win);
@@ -123,15 +146,15 @@ int main() {
 
   std::cout << "Starting application..." << std::endl;
   sf::Clock deltaClock;
+  bool pause = false;
   while (win.isOpen()) {
     handleEvents(win);
     ImGui::SFML::Update(win, deltaClock.restart());
     win.clear();
     game.draw(win);
-    game.evaluateGen();
+    if (!pause) game.evaluateGen();
 
-    ImGui::Begin("Hello ImGUI");
-    ImGui::End();
+    menuWindow(pause, game);
     ImGui::SFML::Render(win);
     win.display();
   }
