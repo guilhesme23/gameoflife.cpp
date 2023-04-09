@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <thread>
 #include <vector>
 
 #include "../lib/imgui/imgui-SFML.h"
@@ -17,9 +18,11 @@ struct Cell {
   bool alive;
 };
 
+using cell_vec = std::vector<std::vector<Cell>>;
+
 class Life {
  private:
-  std::vector<std::vector<Cell>> cells;
+  cell_vec cells;
   int scale, rows, cols;
 
   int countNeighbors(Cell c) {
@@ -37,9 +40,9 @@ class Life {
     return total;
   }
 
-  std::vector<std::vector<Cell>> buildGen() {
+  cell_vec buildGen() {
     double r;
-    std::vector<std::vector<Cell>> generation;
+    cell_vec generation;
     // Setup cells
     for (auto i = 0; i < rows; ++i) {
       generation.push_back(std::vector<Cell>());
@@ -60,20 +63,11 @@ class Life {
     return generation;
   }
 
- public:
-  Life(const int& w, const int& h, const int& s) {
-    scale = s;
-    rows = h / scale;
-    cols = w / scale;
-    cells = buildGen();
-  }
-
-  void evaluateGen() {
-    std::vector<std::vector<Cell>> nextGen;
-    nextGen.reserve(rows);
-    for (auto row : cells) {
-      nextGen.push_back(std::vector<Cell>());
-      for (auto cell : row) {
+  void evaluateSlice(int begin, int end, cell_vec& slice, cell_vec& result) {
+    std::cout << "Thread at: " << begin << " - :)\n";
+    for (auto i = begin; i < end; i++) {
+      result[i] = std::vector<Cell>();
+      for (auto cell : slice[i]) {
         auto neighbors = countNeighbors(cell);
         Cell c = {
           x : cell.x,
@@ -90,9 +84,29 @@ class Life {
           c.alive = false;
         }
 
-        nextGen[c.y].push_back(c);
+        result[c.y].push_back(c);
       }
     }
+  }
+
+ public:
+  Life(const int& w, const int& h, const int& s) {
+    scale = s;
+    rows = h / scale;
+    cols = w / scale;
+    cells = buildGen();
+  }
+
+  void evaluateGen() {
+    cell_vec nextGen;
+    nextGen.resize(rows);
+
+    int half = (int)rows / 2;
+    std::thread worker1(&Life::evaluateSlice, this, 0, half, std::ref(cells), std::ref(nextGen));
+    std::thread worker2(&Life::evaluateSlice, this, half, rows, std::ref(cells), std::ref(nextGen));
+
+    worker1.join();
+    worker2.join();
 
     cells = nextGen;
   }
@@ -142,11 +156,12 @@ int main() {
   ImGui::SFML::Init(win);
 
   std::srand(std::time(0));
-  Life game(WIDTH, HEIGHT, 5);
+  Life game(WIDTH, HEIGHT, 3);
 
   std::cout << "Starting application..." << std::endl;
   sf::Clock deltaClock;
   bool pause = false;
+
   while (win.isOpen()) {
     handleEvents(win);
     ImGui::SFML::Update(win, deltaClock.restart());
