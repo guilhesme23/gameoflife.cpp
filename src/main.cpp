@@ -5,20 +5,10 @@
 #include <iostream>
 #include <vector>
 
-const int WIDTH = 1280, HEIGHT = 920;
+#include "../lib/imgui/imgui-SFML.h"
+#include "../lib/imgui/imgui.h"
 
-void handleEvents(sf::RenderWindow& win) {
-  sf::Event e;
-  while (win.pollEvent(e)) {
-    switch (e.type) {
-      case sf::Event::Closed:
-        win.close();
-        break;
-      default:
-        break;
-    }
-  }
-}
+const int WIDTH = 1280, HEIGHT = 920;
 
 struct Cell {
   int x;
@@ -110,19 +100,42 @@ class Life {
   }
 };
 
+void handleEvents(sf::RenderWindow& win) {
+  sf::Event e;
+  while (win.pollEvent(e)) {
+    ImGui::SFML::ProcessEvent(win, e);
+    switch (e.type) {
+      case sf::Event::Closed:
+        win.close();
+        break;
+      default:
+        break;
+    }
+  }
+}
+
 int main() {
   sf::RenderWindow win(sf::VideoMode(WIDTH, HEIGHT), "Game Of Life");
+  ImGui::SFML::Init(win);
+
   std::srand(std::time(0));
   Life game(WIDTH, HEIGHT, 5);
 
   std::cout << "Starting application..." << std::endl;
+  sf::Clock deltaClock;
   while (win.isOpen()) {
     handleEvents(win);
+    ImGui::SFML::Update(win, deltaClock.restart());
     win.clear();
     game.draw(win);
     game.evaluateGen();
+
+    ImGui::Begin("Hello ImGUI");
+    ImGui::End();
+    ImGui::SFML::Render(win);
     win.display();
   }
 
+  ImGui::SFML::Shutdown();
   return 0;
 }

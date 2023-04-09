@@ -1,6 +1,6 @@
 # Game of Life
 
-Implementation of the famous celullar automata *Game of Life* in C++ using SFML and Dear ImGUI.
+Implementation of the famous celullar automata *Game of Life* in C++ using [SFML](https://www.sfml-dev.org/index.php) and [Dear ImGUI](https://github.com/ocornut/imgui).
 
 Conway's Game of Life is a Celullar Automata in a 2D grid that have simple rules:
 
@@ -26,9 +26,9 @@ cmake .. && make
 
 ## Next Steps
 
-- Add concurrency for better performance
-- Add Dear ImGUI for interactivity (Pause execution, reset board, etc)
-- Record generations in a GIF File
-- Run program using opengl
-- Use a shader to calculate generations
-- Add camera and procedural world
+- [ ] Add Dear ImGUI for interactivity (Pause execution, reset board, etc)
+- [ ] Add concurrency for better performance
+- [ ] Record generations in a GIF File
+- [ ] Run program using opengl
+- [ ] Use a shader to calculate generations
+- [ ] Add camera and procedural world
