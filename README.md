@@ -12,8 +12,10 @@ Conway's Game of Life is a Celullar Automata in a 2D grid that have simple rules
 
 ## Dependencies
 
-- CMake
-- SFML
+- [CMake](https://cmake.org/)
+- [SFML](https://www.sfml-dev.org/index.php)
+- [Dear ImGUI](https://github.com/ocornut/imgui)
+- [ImGUI-SFML](https://github.com/SFML/imgui-sfml)
 
 ## Quickstart
 
