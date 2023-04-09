@@ -28,7 +28,7 @@ cmake .. && make
 
 ## Next Steps
 
-- [ ] Add Dear ImGUI for interactivity (Pause execution, reset board, etc)
+- [x] Add Dear ImGUI for interactivity (Pause execution, reset board, etc)
 - [ ] Add concurrency for better performance
 - [ ] Record generations in a GIF File
 - [ ] Run program using opengl
